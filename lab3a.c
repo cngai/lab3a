@@ -40,7 +40,7 @@ void get_ibr() {
 
 int main(int argc, char * argv[]) {
   //check to make sure correct number of arguments
-  if (arc != 2){
+  if (argc != 2){
     fprintf(stderr, "Error: incorrect number of arguments.\n");
     exit(1);
   }
