@@ -38,6 +38,11 @@ void get_ibr() {
   return;
 }
 
+/* mount the file system */
+void mount(/* there should be a parameter for the file system to be mounted */) {
+    return;
+}
+
 int main(int argc, char * argv[]) {
   //check to make sure correct number of arguments
   if (argc != 2){
@@ -45,6 +50,7 @@ int main(int argc, char * argv[]) {
     exit(1);
   }
 
+    mount();
   get_sbs();
   get_gs();
   get_fbe();
