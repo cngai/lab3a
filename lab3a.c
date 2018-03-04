@@ -10,21 +10,24 @@
 /* get values for superblock summary */
 void get_sbs(int fd) {
 
+    /* declare super_block and inode structs */
     struct ext2_super_block block_summary;
+    struct ext2_inode inode_summary;
     
+    /* read from superblock and inode offsets and write to their respective structs */
     pread(fd, &block_summary, sizeof(ext2_super_block), SUPERBLOCK_OFFSET);
+    pread(fd, &inode_summary, sizeof(inode_summary), block_summary.s_first_ino);
+
+    /* print the data based on the data given in the structs */
     fprintf(stdout, "SUPERBLOCK,%d,%d,%d,%d,%d,%d,%d\n",
             block_summary.s_blocks_count,
             block_summary.s_inodes_count,
             1024 << block_summary.s_log_block_size,
-            block_summary.s_inodes_count / block_summary.s_blocks_count * (1024 << block_summary.s_log_block_size),
+            inode_summary.i_size,
             block_summary.s_blocks_per_group,
             block_summary.s_inodes_per_group,
             block_summary.s_first_data_block);
-    
-    /* NOTE: i-node size calculation is most likely incorrect. I just left it in the
-     printf statement as a placeholder for when we figure out how to actually calculate it. */
-
+
     return;
 }
 
