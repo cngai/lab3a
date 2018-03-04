@@ -59,12 +59,12 @@ void get_gs(int fd) {
     int inode_count_last = superblock_summary.s_inodes_count % superblock_summary.s_inodes_per_group;
     
     /* declare struct for the block group descriptor tables */
-    struct ext2_group_desc bdgt[num_groups];
+    struct ext2_group_desc bgdt[num_groups];
     
     int i, block_count, inode_count;
     for(i = 0; i < num_groups; i++) {
         
-        pread(fd, &bgdt[i], sizeof(struct ext2_group_desc), BGDT_OFFSET + i*sizeof(ext2_group_desc));
+        pread(fd, &bgdt[i], sizeof(struct ext2_group_desc), BGDT_OFFSET + i*sizeof(struct ext2_group_desc));
         
         if(i == num_groups - 1) {
             block_count = block_count_last;
@@ -82,8 +82,8 @@ void get_gs(int fd) {
                 bgdt[i].bg_free_blocks_count,
                 bgdt[i].bg_free_inodes_count,
                 bgdt[i].bg_block_bitmap,
-                bdgt[i].bg_inode_bitmap,
-                bdgt[i].bg_inode_table);
+                bgdt[i].bg_inode_bitmap,
+                bgdt[i].bg_inode_table);
     }
     return;
 }
