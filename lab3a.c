@@ -75,7 +75,7 @@ void get_gs(int fd) {
             inode_count = superblock_summary.s_inodes_count;
         }
         
-        fprintf(stdout, "GROUP,%d,%d,%d,%d,%d,%d,%d,%d\n"
+        fprintf(stdout, "GROUP,%d,%d,%d,%d,%d,%d,%d,%d\n",
                 i,
                 block_count,
                 inode_count,
