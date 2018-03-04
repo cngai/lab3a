@@ -45,48 +45,46 @@ void get_sbs(int fd) {
 /* get values for group summary */
 void get_gs(int fd) {
     
-    /* WE WILL NEED THE GROUP SIZE AND ADDR OF FIRST BLOCK TO TRAVERSE THROUGH THE GROUPS */
-    
     /* determine the size of each group */
     int size_block = 1024 << superblock_summary.s_log_block_size;
     int blocks_per_group = superblock_summary.s_blocks_per_group;
     int size_group = size_block * blocks_per_group;
     
-    /* get the address of the first block */
-    int addr_first_block = superblock_summary.s_first_data_block;
-    
     /* get the total number of groups in the file system */
-    int num_groups = superblock_summary.s_blocks_count / superblock_summary.s_blocks_per_group;
+    int num_groups = superblock_summary.s_blocks_count / superblock_summary.s_blocks_per_group + 1;
     
-    /* declare struct for the block group descriptor table */
-    struct ext2_group_desc bdgt;
+    /* number of blocks in last group */
+    int block_count_last = superblock_summary.s_blocks_count % superblock_summary.s_blocks_per_group;
+    /* number of inodes in last group */
+    int inode_count_last = superblock_summary.s_inodes_count % superblock_summary.s_inodes_per_group;
     
-    int i, offset;
-    for(i = 0, offset = addr_first_block; i < num_groups; i++, offset += size_group) {
-        pread(fd, &bgdt, sizeof(struct ext2_group_desc), offset);
-        // implement fprintf statement
+    /* declare struct for the block group descriptor tables */
+    struct ext2_group_desc bdgt[num_groups];
+    
+    int i, block_count, inode_count;
+    for(i = 0; i < num_groups; i++) {
+        
+        pread(fd, &bgdt[i], sizeof(struct ext2_group_desc), BGDT_OFFSET + i*sizeof(ext2_group_desc));
+        
+        if(i == num_groups - 1) {
+            block_count = block_count_last;
+            inode_count = inode_count_last;
+        }
+        else {
+            block_count = superblock_summary.s_blocks_count;
+            inode_count = superblock_summary.s_inodes_count;
+        }
+        
+        fprintf(stdout, "GROUP,%d,%d,%d,%d,%d,%d,%d,%d\n"
+                i,
+                block_count,
+                inode_count,
+                bgdt[i].bg_free_blocks_count,
+                bgdt[i].bg_free_inodes_count,
+                bgdt[i].bg_block_bitmap,
+                bdgt[i].bg_inode_bitmap,
+                bdgt[i].bg_inode_table);
     }
-    
-    
-    
-    /*
-     
-     Scan each of the groups in the file system. For each group, produce a new-line terminated line for each group, each comprised of nine comma-separated fields (with no white space), summarizing its contents.
-     
-     GROUP
-     group number (decimal, starting from zero)
-     total number of blocks in this group (decimal)
-     total number of i-nodes in this group (decimal)
-     number of free blocks (decimal)
-     number of free i-nodes (decimal)
-     block number of free block bitmap for this group (decimal)
-     block number of free i-node bitmap for this group (decimal)
-     block number of first block of i-nodes in this group (decimal)
-     
-     */
-    
-    
-    
     return;
 }
 
