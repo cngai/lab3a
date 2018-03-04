@@ -34,6 +34,8 @@ void get_sbs(int fd) {
 /* get values for group summary */
 void get_gs(int fd) {
     
+    struct ext2_group_desc group_summary;
+    
     /*
      
      Scan each of the groups in the file system. For each group, produce a new-line terminated line for each group, each comprised of nine comma-separated fields (with no white space), summarizing its contents.
