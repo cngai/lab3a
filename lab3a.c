@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 /* header files needed for open() in C99 */
 #include <sys/types.h>
@@ -10,32 +9,35 @@
 /* header file needed for pread() */
 #include <unistd.h>
 
+/* header file needed to facilitate access to EXT2 file system data */
 #include "ext2_fs.h"
 
 /* define offsets that correspond to the positions of the elements that we want to examine */
 #define SUPERBLOCK_OFFSET 1024
 #define SUPERBLOCK_SIZE 1024
+#define BGDT_OFFSET 2048
+
+/* declare super_block and inode structs */
+struct ext2_super_block superblock_summary;
+struct ext2_inode inode_summary;
+
 
 /* get values for superblock summary */
 void get_sbs(int fd) {
     
-    /* declare super_block and inode structs */
-    struct ext2_super_block block_summary;
-    struct ext2_inode inode_summary;
-    
     /* read from superblock and inode offsets and write to their respective structs */
-    pread(fd, &block_summary, sizeof(struct ext2_super_block), SUPERBLOCK_OFFSET);
-    pread(fd, &inode_summary, sizeof(struct ext2_inode), block_summary.s_first_ino);
+    pread(fd, &superblock_summary, sizeof(struct ext2_super_block), SUPERBLOCK_OFFSET);
+    pread(fd, &inode_summary, sizeof(struct ext2_inode), superblock_summary.s_first_ino);
     
     /* print the data based on the data given in the structs */
     fprintf(stdout, "SUPERBLOCK,%d,%d,%d,%d,%d,%d,%d\n",
-            block_summary.s_blocks_count,
-            block_summary.s_inodes_count,
-            1024 << block_summary.s_log_block_size,
+            superblock_summary.s_blocks_count,
+            superblock_summary.s_inodes_count,
+            1024 << superblock_summary.s_log_block_size,
             inode_summary.i_size,
-            block_summary.s_blocks_per_group,
-            block_summary.s_inodes_per_group,
-            block_summary.s_first_data_block);
+            superblock_summary.s_blocks_per_group,
+            superblock_summary.s_inodes_per_group,
+            superblock_summary.s_first_data_block);
     
     return;
 }
@@ -43,7 +45,29 @@ void get_sbs(int fd) {
 /* get values for group summary */
 void get_gs(int fd) {
     
-    struct ext2_group_desc group_summary;
+    /* WE WILL NEED THE GROUP SIZE AND ADDR OF FIRST BLOCK TO TRAVERSE THROUGH THE GROUPS */
+    
+    /* determine the size of each group */
+    int size_block = 1024 << superblock_summary.s_log_block_size;
+    int blocks_per_group = superblock_summary.s_blocks_per_group;
+    int size_group = size_block * blocks_per_group;
+    
+    /* get the address of the first block */
+    int addr_first_block = superblock_summary.s_first_data_block;
+    
+    /* get the total number of groups in the file system */
+    int num_groups = superblock_summary.s_blocks_count / superblock_summary.s_blocks_per_group;
+    
+    /* declare struct for the block group descriptor table */
+    struct ext2_group_desc bdgt;
+    
+    int i, offset;
+    for(i = 0, offset = addr_first_block; i < num_groups; i++, offset += size_group) {
+        pread(fd, &bgdt, sizeof(struct ext2_group_desc), offset);
+        // implement fprintf statement
+    }
+    
+    
     
     /*
      
