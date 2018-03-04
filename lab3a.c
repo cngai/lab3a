@@ -30,6 +30,25 @@ void get_sbs(int fd) {
 
 /* get values for group summary */
 void get_gs(int fd) {
+    
+    /*
+     
+     Scan each of the groups in the file system. For each group, produce a new-line terminated line for each group, each comprised of nine comma-separated fields (with no white space), summarizing its contents.
+     
+     GROUP
+     group number (decimal, starting from zero)
+     total number of blocks in this group (decimal)
+     total number of i-nodes in this group (decimal)
+     number of free blocks (decimal)
+     number of free i-nodes (decimal)
+     block number of free block bitmap for this group (decimal)
+     block number of free i-node bitmap for this group (decimal)
+     block number of first block of i-nodes in this group (decimal)
+     
+     */
+    
+    
+    
   return;
 }
 
