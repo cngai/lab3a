@@ -40,7 +40,7 @@ int num_groups;
 int size_blocks;
 
 /* offset of inode table within each group */
-int inode_offset_within_group = 214*size_blocks;
+//int inode_offset_within_group = 214 * size_blocks;    //took this out because can't initialize if size_blocks hasn't been initialized
 
 /* wrapper function to get the time formatting for i-node summary */
 void get_time(uint32_t c_time, uint32_t m_time, uint32_t a_time, char* c_array, char* m_array, char* a_array){
@@ -49,9 +49,9 @@ void get_time(uint32_t c_time, uint32_t m_time, uint32_t a_time, char* c_array, 
     const time_t acc_time = a_time;
     
     /* broken-down times */
-    const struct tm bd_c_time = *gmt(change_time);
-    const struct tm bd_m_time = *gmt(mod_time);
-    const struct tm bd_a_time = *gmt(acc_time);
+    const struct tm bd_c_time = *gmtime(&change_time);
+    const struct tm bd_m_time = *gmtime(&mod_time);
+    const struct tm bd_a_time = *gmtime(&acc_time);
     
     /* format time and place into appropriate char array */
     if (strftime(c_array, 20, "%m/%d/%y %H:%M:%S", &bd_c_time) == 0){
@@ -185,32 +185,6 @@ void get_fbe_fie(int fd) {
 //     }
 // }
 
-/* get time and put in specified format */
-void get_time(uint32_t c_time, uint32_t m_time, uint32_t a_time, char* c_array, char* m_array, char* a_array){
-    const time_t change_time = c_time;
-    const time_t mod_time = m_time;
-    const time_t acc_time = a_time;
-
-    /* broken-down times */
-    const struct tm bd_c_time = *gmt(change_time);
-    const struct tm bd_m_time = *gmt(mod_time);
-    const struct tm bd_a_time = *gmt(acc_time);
-
-    /* format time and place into appropriate char array */
-    if (strftime(c_array, 20, "%m/%d/%y %H:%M:%S", &bd_c_time) == 0){
-        fprintf(stderr, "Error: unable to format change time. %s.\n", strerror(errno));
-        exit(1);
-    }
-    if (strftime(m_array, 20, "%m/%d/%y %H:%M:%S", &bd_m_time) == 0){
-        fprintf(stderr, "Error: unable to format modified time. %s.\n", strerror(errno));
-        exit(1);
-    }
-    if (strftime(a_array, 20, "%m/%d/%y %H:%M:%S", &bd_a_time) == 0){
-        fprintf(stderr, "Error: unable to format access time. %s.\n", strerror(errno));
-        exit(1);
-    }
-}
-
 /* get values for directory entries */
 void get_de(int fd) {
     return;
@@ -227,13 +201,16 @@ void get_is(int fd) {
     /* address of inode table is located at this offset + a multiple of the group size */
     int inode_addr = SUPERBLOCK_OFFSET + 4*size_blocks;
 
+    /* offset of inode table within each group */
+    int inode_offset_within_group = 214 * size_blocks;
+
     /* iterate through each group */
     int i;
     for(i = 0; i < num_groups; i++) {
         
         /* within each group, iterate through each inode */
-        int j;
-        for(j = 0; j < superblock_summary.inode_count < j++) {
+        unsigned int j;
+        for(j = 0; j < superblock_summary.s_inodes_count; j++) {
             
             struct ext2_inode inode_desc; /* declare struct to hold information about inode */
             
@@ -263,7 +240,7 @@ void get_is(int fd) {
             fprintf(stdout, "INODE,%d,%c,%o,%d,%d,%d,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
                     j + 1,
                     file_type,
-                    inode_desc.imode & 0xFFF,
+                    inode_desc.i_mode & 0xFFF,
                     inode_desc.i_uid,
                     inode_desc.i_gid,
                     inode_desc.i_links_count,
