@@ -16,6 +16,9 @@
 #include <errno.h>
 #include <string.h>
 
+/* header file needed to use *gmtime() */
+#include <time.h>
+
 /* define offsets that correspond to the positions of the elements that we want to examine */
 #define SUPERBLOCK_OFFSET 1024
 #define SUPERBLOCK_SIZE 1024
@@ -142,6 +145,32 @@ void get_fie(int fd) {
                 }
             }
         }
+    }
+}
+
+/* get time and put in specified format */
+void get_time(uint32_t c_time, uint32_t m_time, uint32_t a_time, char* c_array, char* m_array, char* a_array){
+    const time_t change_time = c_time;
+    const time_t mod_time = m_time;
+    const time_t acc_time = a_time;
+
+    /* broken-down times */
+    const struct tm bd_c_time = *gmt(change_time);
+    const struct tm bd_m_time = *gmt(mod_time);
+    const struct tm bd_a_time = *gmt(acc_time);
+
+    /* format time and place into appropriate char array */
+    if (strftime(c_array, 20, "%m/%d/%y %H:%M:%S", &bd_c_time) == 0){
+        fprintf(stderr, "Error: unable to format change time. %s.\n", strerror(errno));
+        exit(1);
+    }
+    if (strftime(m_array, 20, "%m/%d/%y %H:%M:%S", &bd_m_time) == 0){
+        fprintf(stderr, "Error: unable to format modified time. %s.\n", strerror(errno));
+        exit(1);
+    }
+    if (strftime(a_array, 20, "%m/%d/%y %H:%M:%S", &bd_a_time) == 0){
+        fprintf(stderr, "Error: unable to format access time. %s.\n", strerror(errno));
+        exit(1);
     }
 }
 
