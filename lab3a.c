@@ -12,14 +12,27 @@
 /* header file needed to facilitate access to EXT2 file system data */
 #include "ext2_fs.h"
 
+/* header file needed to use strerror() */
+#include <errno.h>
+#include <string.h>
+
 /* define offsets that correspond to the positions of the elements that we want to examine */
 #define SUPERBLOCK_OFFSET 1024
 #define SUPERBLOCK_SIZE 1024
 #define BGDT_OFFSET 2048
 
+/* hold value of error number */
+int errno;
+
 /* declare super_block and inode structs */
 struct ext2_super_block superblock_summary;
 struct ext2_inode inode_summary;
+
+/* declare block-group descriptor */
+struct ext2_group_desc* bgdt;
+
+/* total number of groups in the file system */
+int num_groups;
 
 
 /* get values for superblock summary */
@@ -38,28 +51,29 @@ void get_sbs(int fd) {
             superblock_summary.s_blocks_per_group,
             superblock_summary.s_inodes_per_group,
             superblock_summary.s_first_data_block);
-    
-    return;
 }
 
 /* get values for group summary */
 void get_gs(int fd) {
     
     /* determine the size of each group */
-    int size_block = 1024 << superblock_summary.s_log_block_size;
+    /* int size_block = 1024 << superblock_summary.s_log_block_size;            //commented this out b/c you don't use any of these variables
     int blocks_per_group = superblock_summary.s_blocks_per_group;
-    int size_group = size_block * blocks_per_group;
+    int size_group = size_block * blocks_per_group; */
     
     /* get the total number of groups in the file system */
-    int num_groups = superblock_summary.s_blocks_count / superblock_summary.s_blocks_per_group + 1;
+    num_groups = superblock_summary.s_blocks_count / superblock_summary.s_blocks_per_group + 1;
     
     /* number of blocks in last group */
     int block_count_last = superblock_summary.s_blocks_count % superblock_summary.s_blocks_per_group;
     /* number of inodes in last group */
     int inode_count_last = superblock_summary.s_inodes_count % superblock_summary.s_inodes_per_group;
     
-    /* declare struct for the block group descriptor tables */
-    struct ext2_group_desc bgdt[num_groups];
+    /* initialize struct for the block group descriptor tables */
+    bgdt = malloc(num_groups * sizeof(struct ext2_group_desc));
+    if (bgdt == NULL){
+        fprintf(stderr, "Error allocating memory. %s\n", strerror(errno));
+    }
     
     int i, block_count, inode_count;
     for(i = 0; i < num_groups; i++) {
@@ -85,12 +99,29 @@ void get_gs(int fd) {
                 bgdt[i].bg_inode_bitmap,
                 bgdt[i].bg_inode_table);
     }
-    return;
 }
 
 /* get values for free block entries */
 void get_fbe(int fd) {
-    return;
+    /* iterate through each group */
+    int i, j, k;
+    for (i = 0; i < num_groups; i++){
+        /* iterate through each block in each group */
+        for (j = 0; j < (1024 << superblock_summary.s_log_block_size); j++){
+            /* read byte by byte from block bitmap */
+            uint8_t byte;
+            pread(fd, &byte, 1, (bgdt[i].bg_block_bitmap * (1024 << superblock_summary.s_log_block_size)) + j);
+
+            /* iterate through all 8 bits of byte to find free block */
+            for (k = 0; k < 8; k++){
+                /* free block represented by '0' and used block represented by '1' */
+                if ((byte & (1 << k)) == 0){
+                    fprintf(stdout, "IFREE,%d\n", (i * superblock_summary.s_blocks_per_group) + (j * 8) + (k + 1));
+                }
+
+            }
+        }
+    }
 }
 
 /* get values for free i-node entries */
