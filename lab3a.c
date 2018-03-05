@@ -308,8 +308,8 @@ int main(int argc, char * argv[]) {
     
     get_sbs(fd);
     get_gs(fd);
-    get_fbe(fd);
-    get_fie(fd);
+    get_fbe_fie(fd);
+    //get_fie(fd);
     get_is(fd);
     get_de(fd);
     get_ibr(fd);
