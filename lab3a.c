@@ -16,15 +16,7 @@
 #include <errno.h>
 #include <string.h>
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 /* header file for time */
-=======
-/* header file needed to use *gmtime() */
->>>>>>> 1935634bd15bff8b696f8d8791a56875dc249c76
-=======
-/* header file needed to use *gmtime() */
->>>>>>> 1935634bd15bff8b696f8d8791a56875dc249c76
 #include <time.h>
 
 /* define offsets that correspond to the positions of the elements that we want to examine */
@@ -184,11 +176,6 @@ void get_fie(int fd) {
     }
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 1935634bd15bff8b696f8d8791a56875dc249c76
 /* get time and put in specified format */
 void get_time(uint32_t c_time, uint32_t m_time, uint32_t a_time, char* c_array, char* m_array, char* a_array){
     const time_t change_time = c_time;
@@ -220,7 +207,6 @@ void get_is(int fd) {
     return;
 }
 
->>>>>>> 1935634bd15bff8b696f8d8791a56875dc249c76
 /* get values for directory entries */
 void get_de(int fd) {
     return;
