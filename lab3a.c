@@ -16,6 +16,13 @@
 #include <errno.h>
 #include <string.h>
 
+<<<<<<< HEAD
+/* header file for time */
+=======
+/* header file needed to use *gmtime() */
+>>>>>>> 1935634bd15bff8b696f8d8791a56875dc249c76
+#include <time.h>
+
 /* define offsets that correspond to the positions of the elements that we want to examine */
 #define SUPERBLOCK_OFFSET 1024
 #define SUPERBLOCK_SIZE 1024
@@ -26,7 +33,6 @@ int errno;
 
 /* declare super_block and inode structs */
 struct ext2_super_block superblock_summary;
-struct ext2_inode inode_summary;
 
 /* declare block-group descriptor */
 struct ext2_group_desc* bgdt;
@@ -34,33 +40,62 @@ struct ext2_group_desc* bgdt;
 /* total number of groups in the file system */
 int num_groups;
 
+/* size of each block */
+int size_blocks;
+
+/* offset of inode table within each group */
+int inode_offset_within_group = 214*size_blocks;
+
+/* wrapper function to get the time formatting for i-node summary */
+void get_time(uint32_t c_time, uint32_t m_time, uint32_t a_time, char* c_array, char* m_array, char* a_array){
+    const time_t change_time = c_time;
+    const time_t mod_time = m_time;
+    const time_t acc_time = a_time;
+    
+    /* broken-down times */
+    const struct tm bd_c_time = *gmt(change_time);
+    const struct tm bd_m_time = *gmt(mod_time);
+    const struct tm bd_a_time = *gmt(acc_time);
+    
+    /* format time and place into appropriate char array */
+    if (strftime(c_array, 20, "%m/%d/%y %H:%M:%S", &bd_c_time) == 0){
+        fprintf(stderr, "Error: unable to format change time. %s.\n", strerror(errno));
+        exit(1);
+    }
+    if (strftime(m_array, 20, "%m/%d/%y %H:%M:%S", &bd_m_time) == 0){
+        fprintf(stderr, "Error: unable to format modified time. %s.\n", strerror(errno));
+        exit(1);
+    }
+    if (strftime(a_array, 20, "%m/%d/%y %H:%M:%S", &bd_a_time) == 0){
+        fprintf(stderr, "Error: unable to format access time. %s.\n", strerror(errno));
+        exit(1);
+    }
+}
+
 
 /* get values for superblock summary */
 void get_sbs(int fd) {
     
     /* read from superblock and inode offsets and write to their respective structs */
     pread(fd, &superblock_summary, sizeof(struct ext2_super_block), SUPERBLOCK_OFFSET);
-    pread(fd, &inode_summary, sizeof(struct ext2_inode), superblock_summary.s_first_ino);
+    
+    size_blocks = 1024 << superblock_summary.s_log_block_size;
     
     /* print the data based on the data given in the structs */
     fprintf(stdout, "SUPERBLOCK,%d,%d,%d,%d,%d,%d,%d\n",
             superblock_summary.s_blocks_count,
             superblock_summary.s_inodes_count,
-            1024 << superblock_summary.s_log_block_size,
-            inode_summary.i_size,
+            size_blocks,
+            superblock_summary.s_inode_size,
             superblock_summary.s_blocks_per_group,
             superblock_summary.s_inodes_per_group,
             superblock_summary.s_first_data_block);
+    
 }
 
 /* get values for group summary */
 void get_gs(int fd) {
-    
-    /* determine the size of each group */
-    /* int size_block = 1024 << superblock_summary.s_log_block_size;            //commented this out b/c you don't use any of these variables
-    int blocks_per_group = superblock_summary.s_blocks_per_group;
-    int size_group = size_block * blocks_per_group; */
-    
+
     /* get the total number of groups in the file system */
     num_groups = superblock_summary.s_blocks_count / superblock_summary.s_blocks_per_group + 1;
     
@@ -145,11 +180,40 @@ void get_fie(int fd) {
     }
 }
 
+<<<<<<< HEAD
+=======
+/* get time and put in specified format */
+void get_time(uint32_t c_time, uint32_t m_time, uint32_t a_time, char* c_array, char* m_array, char* a_array){
+    const time_t change_time = c_time;
+    const time_t mod_time = m_time;
+    const time_t acc_time = a_time;
+
+    /* broken-down times */
+    const struct tm bd_c_time = *gmt(change_time);
+    const struct tm bd_m_time = *gmt(mod_time);
+    const struct tm bd_a_time = *gmt(acc_time);
+
+    /* format time and place into appropriate char array */
+    if (strftime(c_array, 20, "%m/%d/%y %H:%M:%S", &bd_c_time) == 0){
+        fprintf(stderr, "Error: unable to format change time. %s.\n", strerror(errno));
+        exit(1);
+    }
+    if (strftime(m_array, 20, "%m/%d/%y %H:%M:%S", &bd_m_time) == 0){
+        fprintf(stderr, "Error: unable to format modified time. %s.\n", strerror(errno));
+        exit(1);
+    }
+    if (strftime(a_array, 20, "%m/%d/%y %H:%M:%S", &bd_a_time) == 0){
+        fprintf(stderr, "Error: unable to format access time. %s.\n", strerror(errno));
+        exit(1);
+    }
+}
+
 /* get values for i-node summary */
 void get_is(int fd) {
     return;
 }
 
+>>>>>>> 1935634bd15bff8b696f8d8791a56875dc249c76
 /* get values for directory entries */
 void get_de(int fd) {
     return;
@@ -157,6 +221,81 @@ void get_de(int fd) {
 
 /* get values for indirect block references */
 void get_ibr(int fd) {
+    return;
+}
+
+/* get values for i-node summary */
+void get_is(int fd) {
+    
+    /* address of inode table is located at this offset + a multiple of the group size */
+    int inode_addr = SUPERBLOCK_OFFSET + 4*size_blocks;
+
+    /* iterate through each group */
+    int i;
+    for(i = 0; i < num_groups; i++) {
+        
+        /* within each group, iterate through each inode */
+        int j;
+        for(j = 0; j < superblock_summary.inode_count < j++) {
+            
+            struct ext2_inode inode_desc; /* declare struct to hold information about inode */
+            
+            /* read the inode table into the struct */
+            pread(fd, &inode_desc, inode_offset_within_group, inode_addr + j*sizeof(struct ext2_group_desc));
+
+            /* if the inode is not being used, iterate to the next inode */
+            if(inode_desc.i_mode == 0 || inode_desc.i_links_count == 0)
+                continue;
+            
+            /* get the file type */
+            char file_type;
+            if(inode_desc.i_mode & 0xA000)
+                file_type = 's';
+            if(inode_desc.i_mode & 0xA000)
+                file_type = 'f';
+            if(inode_desc.i_mode & 0x4000)
+                file_type = 'd';
+            else
+                file_type = '?';
+
+            /* get the creation, modification, and access times */
+            char create_time[20], mod_time[20], access_time[20];
+            get_time(inode_desc.i_ctime, inode_desc.i_mtime, inode_desc.i_atime, create_time, mod_time, access_time);
+            
+            /* print out the i-node summary for that node */
+            fprintf(stdout, "INODE,%d,%c,%o,%d,%d,%d,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+                    j + 1,
+                    file_type,
+                    inode_desc.imode & 0xFFF,
+                    inode_desc.i_uid,
+                    inode_desc.i_gid,
+                    inode_desc.i_links_count,
+                    create_time,
+                    mod_time,
+                    access_time,
+                    inode_desc.i_size,
+                    inode_desc.i_blocks,
+                    inode_desc.i_block[0],
+                    inode_desc.i_block[1],
+                    inode_desc.i_block[2],
+                    inode_desc.i_block[3],
+                    inode_desc.i_block[4],
+                    inode_desc.i_block[5],
+                    inode_desc.i_block[6],
+                    inode_desc.i_block[7],
+                    inode_desc.i_block[8],
+                    inode_desc.i_block[9],
+                    inode_desc.i_block[10],
+                    inode_desc.i_block[11],
+                    inode_desc.i_block[12],
+                    inode_desc.i_block[13],
+                    inode_desc.i_block[14]
+                    );
+        }
+    }
+
+    // inode_addr += sizeof(struct ext2_group_desc);
+    
     return;
 }
 
