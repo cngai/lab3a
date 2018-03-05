@@ -132,22 +132,31 @@ void get_gs(int fd) {
     }
 }
 
-/* get values for free block entries */
-void get_fbe(int fd) {
+/* get values for free block entries and free i-node entries */
+void get_fbe_fie(int fd) {
     int i, j, k;
     /* iterate through each group */
     for (i = 0; i < num_groups; i++){
         /* iterate through each block in each group */
         for (j = 0; j < (1024 << superblock_summary.s_log_block_size); j++){
             /* read byte by byte from block bitmap */
-            uint8_t byte;
-            pread(fd, &byte, 1, (bgdt[i].bg_block_bitmap * (1024 << superblock_summary.s_log_block_size)) + j);
+            uint8_t b_byte;
+            pread(fd, &b_byte, 1, (bgdt[i].bg_block_bitmap * (1024 << superblock_summary.s_log_block_size)) + j);
+
+            /* read byte by byte from inode bitmap */
+            uint8_t i_byte;
+            pread(fd, &i_byte, 1, (bgdt[i].bg_inode_bitmap * (1024 << superblock_summary.s_log_block_size)) + j);
 
             /* iterate through all 8 bits of byte to find free block */
             for (k = 0; k < 8; k++){
                 /* free block represented by '0' and used block represented by '1' */
-                if ((byte & (1 << k)) == 0){
+                if ((b_byte & (1 << k)) == 0){
                     fprintf(stdout, "BFREE,%d\n", (i * superblock_summary.s_blocks_per_group) + (j * 8) + (k + 1));
+                }
+
+                /* free i-node represented by '0' and used i-node represented by '1' */
+                if ((i_byte & (1 << k)) == 0){
+                    fprintf(stdout, "IFREE,%d\n", (i * superblock_summary.s_inodes_per_group) + (j * 8) + (k + 1));
                 }
             }
         }
@@ -155,26 +164,26 @@ void get_fbe(int fd) {
 }
 
 /* get values for free i-node entries */
-void get_fie(int fd) {
-    int i, j, k;
-    /* iterate through each group */
-    for (i = 0; i < num_groups; i++){
-        /* iterate through each block in each group */
-        for (j = 0; j < (1024 << superblock_summary.s_log_block_size); j++){
-            /* read byte by byte from block bitmap */
-            uint8_t byte;
-            pread(fd, &byte, 1, (bgdt[i].bg_inode_bitmap * (1024 << superblock_summary.s_log_block_size)) + j);
+// void get_fie(int fd) {
+//     int i, j, k;
+//     /* iterate through each group */
+//     for (i = 0; i < num_groups; i++){
+//         /* iterate through each block in each group */
+//         for (j = 0; j < (1024 << superblock_summary.s_log_block_size); j++){
+//             /* read byte by byte from inode bitmap */
+//             uint8_t byte;
+//             pread(fd, &byte, 1, (bgdt[i].bg_inode_bitmap * (1024 << superblock_summary.s_log_block_size)) + j);
 
-            /* iterate through all 8 bits of byte to find free i-node */
-            for (k = 0; k < 8; k++){
-                /* free i-node represented by '0' and used i-node represented by '1' */
-                if ((byte & (1 << k)) == 0){
-                    fprintf(stdout, "IFREE,%d\n", (i * superblock_summary.s_inodes_per_group) + (j * 8) + (k + 1));
-                }
-            }
-        }
-    }
-}
+//             /* iterate through all 8 bits of byte to find free i-node */
+//             for (k = 0; k < 8; k++){
+//                 /* free i-node represented by '0' and used i-node represented by '1' */
+//                 if ((byte & (1 << k)) == 0){
+//                     fprintf(stdout, "IFREE,%d\n", (i * superblock_summary.s_inodes_per_group) + (j * 8) + (k + 1));
+//                 }
+//             }
+//         }
+//     }
+// }
 
 /* get time and put in specified format */
 void get_time(uint32_t c_time, uint32_t m_time, uint32_t a_time, char* c_array, char* m_array, char* a_array){
@@ -200,11 +209,6 @@ void get_time(uint32_t c_time, uint32_t m_time, uint32_t a_time, char* c_array, 
         fprintf(stderr, "Error: unable to format access time. %s.\n", strerror(errno));
         exit(1);
     }
-}
-
-/* get values for i-node summary */
-void get_is(int fd) {
-    return;
 }
 
 /* get values for directory entries */
