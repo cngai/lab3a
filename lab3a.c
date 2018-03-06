@@ -163,28 +163,6 @@ void get_fbe_fie(int fd) {
     }
 }
 
-/* get values for free i-node entries */
-// void get_fie(int fd) {
-//     int i, j, k;
-//     /* iterate through each group */
-//     for (i = 0; i < num_groups; i++){
-//         /* iterate through each block in each group */
-//         for (j = 0; j < (1024 << superblock_summary.s_log_block_size); j++){
-//             /* read byte by byte from inode bitmap */
-//             uint8_t byte;
-//             pread(fd, &byte, 1, (bgdt[i].bg_inode_bitmap * (1024 << superblock_summary.s_log_block_size)) + j);
-
-//             /* iterate through all 8 bits of byte to find free i-node */
-//             for (k = 0; k < 8; k++){
-//                 /* free i-node represented by '0' and used i-node represented by '1' */
-//                 if ((byte & (1 << k)) == 0){
-//                     fprintf(stdout, "IFREE,%d\n", (i * superblock_summary.s_inodes_per_group) + (j * 8) + (k + 1));
-//                 }
-//             }
-//         }
-//     }
-// }
-
 /* get values for directory entries */
 void get_de(int fd) {
     return;
