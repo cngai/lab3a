@@ -163,9 +163,23 @@ void get_fbe_fie(int fd) {
     }
 }
 
-/* get values for directory entries */
-void get_de(int fd) {
-    return;
+/* get values for directory entries, and return new offset */
+int get_de(int fd, int inode_num, int offset) {
+    
+    /* declare struct for directory entry */
+    struct ext2_dir_entry directory_entry;
+    
+    pread(fd, &directory_entry, sizeof(struct ext2_dir_entry), offset);
+    
+    fprintf(stdout, "DIRENT,%d,%d,%d,%d,%d,'%s'\n",
+            inode_num,
+            offset,
+            directory_entry.inode,
+            directory_entry.rec_len,
+            directory_entry.name_len,
+            directory.name);
+    
+    return directory_entry.rec_len;
 }
 
 /* get values for indirect block references */
@@ -243,6 +257,24 @@ void get_is(int fd) {
                     inode_desc.i_block[13],
                     inode_desc.i_block[14]
                     );
+            
+            /* if file type is not a file or a directory, continue */
+            if(file_type != 'd' && file_type != 'f')
+                continue;
+            
+            /* PROCESS DIRECTORY CONTENTS FOR BLOCKS 1 TO 12 (THE DIRECT BLOCKS): */
+            int k;
+            for(k = 0; k < EXT2_NDIR_BLOCKS; k++) {
+
+                if(inode_desc.i_block[k] == 0)
+                    break;
+
+                int dir_offset = inode_desc.i_block[k] * size_blocks;
+                int local_offset = 0;
+                while(local_offset < size_blocks)
+                    local_offset += get_de(fd, j + 1, dir_offset + local_offset);
+            }
+            
         }
     }
     
@@ -263,7 +295,5 @@ int main(int argc, char * argv[]) {
     get_gs(fd);
     get_fbe_fie(fd);
     get_is(fd);
-    get_de(fd);
-    get_ibr(fd);
     exit(0);
 }
