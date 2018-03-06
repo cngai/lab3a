@@ -180,8 +180,20 @@ int get_de(int fd, int inode_num, int offset) {
 }
 
 /* get values for indirect block references */
-int get_ibr(int fd, int inode_num, int offset, int level) {
-    return 1;
+int get_ibr(int fd, int inode_num, int offset, int level_indirection, int block_num_ind, int block_num_ref) {
+
+    struct ext_dir_entry directory_entry;
+    
+    pread(fd, &directory_entry, sizeof(struct ext2_dir_entry), offset);
+    if(directory_entry.inode != 0)
+        fprintf(stdout, "INDIRECT,%d,%d,%d,%d,%d\n",
+                inode_num,
+                level_indirection,
+                offset,
+                block_num_ind,
+                block_num_ind + block_num_ref);
+
+    return directory_entry.rec_len;
 }
 
 /* get values for i-node summary */
@@ -292,7 +304,7 @@ void get_is(int fd) {
                     int dir_offset = single_indir_addrs[m] * size_blocks;
                     int local_offset = 0;
                     while(local_offset < size_blocks)
-                        local_offset += get_ibr();
+                        local_offset += get_ibr(fd, j + 1, 12 + m, 1, inode_desc.i_block[12], m + 1);
                 }
             }
             
