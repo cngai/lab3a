@@ -182,7 +182,7 @@ int get_de(int fd, int inode_num, int offset) {
 /* get values for indirect block references */
 int get_ibr(int fd, int inode_num, int offset, int level_indirection, int block_num_ind, int block_num_ref) {
 
-    struct ext_dir_entry directory_entry;
+    struct ext2_dir_entry directory_entry;
     
     pread(fd, &directory_entry, sizeof(struct ext2_dir_entry), offset);
     if(directory_entry.inode != 0)
@@ -302,7 +302,7 @@ void get_is(int fd) {
                     if(single_indir_addrs[m] == 0)
                         break;
                     
-                    int dir_offset = single_indir_addrs[m] * size_blocks;
+                    //int dir_offset = single_indir_addrs[m] * size_blocks;
                     int local_offset = 0;
                     while(local_offset < size_blocks)
                         local_offset += get_ibr(fd, j + 1, 12 + m, 1, inode_desc.i_block[12], m + 1);
@@ -324,10 +324,10 @@ void get_is(int fd) {
                     /* iterate through primary indirect block addresses */
                     int y;
                     for (y = 0; y < size_blocks/4; y++){
-                        if(single_indir_addrs[m] == 0)
+                        if(single_indir_addrs[y] == 0)
                             break;
                     
-                        int dir_offset = single_indir_addrs[y] * size_blocks;
+                        //int dir_offset = single_indir_addrs[y] * size_blocks;
                         int local_offset = 0;
                         while(local_offset < size_blocks)
                             local_offset += get_ibr(fd, j + 1, 13 + y, 2, inode_desc.i_block[13], y + 1);
@@ -359,7 +359,7 @@ void get_is(int fd) {
                             if(single_indir_addrs[c] == 0)
                                 break;
                     
-                            int dir_offset = single_indir_addrs[c] * size_blocks;
+                            //int dir_offset = single_indir_addrs[c] * size_blocks;
                             int local_offset = 0;
                             while(local_offset < size_blocks)
                                 local_offset += get_ibr(fd, j + 1, 13 + c, 3, inode_desc.i_block[14], c + 1);
