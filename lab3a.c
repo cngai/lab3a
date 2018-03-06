@@ -142,18 +142,18 @@ void get_fbe_fie(int fd) {
             /* read byte by byte from block bitmap */
             uint8_t b_byte;
             pread(fd, &b_byte, 1, (bgdt[i].bg_block_bitmap * (1024 << superblock_summary.s_log_block_size)) + j);
-
+            
             /* read byte by byte from inode bitmap */
             uint8_t i_byte;
             pread(fd, &i_byte, 1, (bgdt[i].bg_inode_bitmap * (1024 << superblock_summary.s_log_block_size)) + j);
-
+            
             /* iterate through all 8 bits of byte to find free block */
             for (k = 0; k < 8; k++){
                 /* free block represented by '0' and used block represented by '1' */
                 if ((b_byte & (1 << k)) == 0){
                     fprintf(stdout, "BFREE,%d\n", (i * superblock_summary.s_blocks_per_group) + (j * 8) + (k + 1));
                 }
-
+                
                 /* free i-node represented by '0' and used i-node represented by '1' */
                 if ((i_byte & (1 << k)) == 0){
                     fprintf(stdout, "IFREE,%d\n", (i * superblock_summary.s_inodes_per_group) + (j * 8) + (k + 1));
@@ -162,28 +162,6 @@ void get_fbe_fie(int fd) {
         }
     }
 }
-
-/* get values for free i-node entries */
-// void get_fie(int fd) {
-//     int i, j, k;
-//     /* iterate through each group */
-//     for (i = 0; i < num_groups; i++){
-//         /* iterate through each block in each group */
-//         for (j = 0; j < (1024 << superblock_summary.s_log_block_size); j++){
-//             /* read byte by byte from inode bitmap */
-//             uint8_t byte;
-//             pread(fd, &byte, 1, (bgdt[i].bg_inode_bitmap * (1024 << superblock_summary.s_log_block_size)) + j);
-
-//             /* iterate through all 8 bits of byte to find free i-node */
-//             for (k = 0; k < 8; k++){
-//                 /* free i-node represented by '0' and used i-node represented by '1' */
-//                 if ((byte & (1 << k)) == 0){
-//                     fprintf(stdout, "IFREE,%d\n", (i * superblock_summary.s_inodes_per_group) + (j * 8) + (k + 1));
-//                 }
-//             }
-//         }
-//     }
-// }
 
 /* get values for directory entries */
 void get_de(int fd) {
@@ -200,10 +178,10 @@ void get_is(int fd) {
     
     /* address of inode table is located at this offset + a multiple of the group size */
     int inode_addr = SUPERBLOCK_OFFSET + 4*size_blocks;
-
+    
     /* offset of inode table within each group */
     int inode_offset_within_group = 214 * size_blocks;
-
+    
     /* iterate through each group */
     int i;
     for(i = 0; i < num_groups; i++) {
@@ -286,7 +264,6 @@ int main(int argc, char * argv[]) {
     get_sbs(fd);
     get_gs(fd);
     get_fbe_fie(fd);
-    //get_fie(fd);
     get_is(fd);
     get_de(fd);
     get_ibr(fd);
