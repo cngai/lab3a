@@ -246,8 +246,6 @@ void get_is(int fd) {
         }
     }
     
-    // inode_addr += sizeof(struct ext2_group_desc);
-    
     return;
 }
 
@@ -264,7 +262,6 @@ int main(int argc, char * argv[]) {
     get_sbs(fd);
     get_gs(fd);
     get_fbe_fie(fd);
-    //get_fie(fd);
     get_is(fd);
     get_de(fd);
     get_ibr(fd);
