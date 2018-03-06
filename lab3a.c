@@ -288,6 +288,8 @@ void get_is(int fd) {
             int * single_indir_addrs = malloc(size_blocks);
             int * double_indir_addrs = malloc(size_blocks);
             int * triple_indir_addrs = malloc(size_blocks);
+
+            /* SINGLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
             
             if(inode_desc.i_block[12] > 0) {
                 
@@ -305,6 +307,59 @@ void get_is(int fd) {
                     int local_offset = 0;
                     while(local_offset < size_blocks)
                         local_offset += get_ibr(fd, j + 1, 12 + m, 1, inode_desc.i_block[12], m + 1);
+                }
+            }
+
+            /* DOUBLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
+
+            if (inode_desc.i_block[13] > 0) {
+                /* read double indirect block addresses */
+                pread(fd, double_indir_addrs, size_blocks, inode_desc.i_block[13] * size_blocks);
+
+                /* iterate through double indirect block addresses */
+                int x;
+                for (x = 0; x < size_blocks/4; x++){
+                    /* read primary indirect block addresses */
+                    pread(fd, single_indir_addrs, size_blocks, double_indir_addrs[x] * size_blocks);
+
+                    /* iterate through primary indirect block addresses */
+                    int y;
+                    for (y = 0; y < size_blocks/4; y++){
+                        /* implement process indirectory here */
+
+
+
+                    }
+                }
+            }
+
+            /* TRIPLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
+
+            if (inode_desc.i_block[14] > 0){
+                /* read triple indirect block addresses */
+                pread(fd, triple_indir_addrs, size_blocks, inode_desc.i_block[14] * size_blocks);
+
+                /* iterate through triple indirect block addresses */
+                int a;
+                for (a = 0; a < size_blocks/4; a++){
+                    /* read double indirect block addresses */
+                    pread(fd, double_indir_addrs, size_blocks, triple_indir_addrs[a] * size_blocks);
+
+                    /* iterate through double indirect block addresses */
+                    int b;
+                    for (b = 0; b < size_blocks/4; b++){
+                        /* read primary indirect block addresses */
+                        pread(fd, single_indir_addrs, size_blocks, double_indir_addrs[b] * size_blocks);
+
+                        /* iterate through primary indirect block addresses */
+                        int c;
+                        for (c = 0; c < size_blocks/4; c++){
+                            /* implement process indirectory here */
+
+
+                            
+                        }
+                    }
                 }
             }
             
