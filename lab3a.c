@@ -91,7 +91,7 @@ void get_sbs(int fd) {
 
 /* get values for group summary */
 void get_gs(int fd) {
-    
+
     /* get the total number of groups in the file system */
     num_groups = superblock_summary.s_blocks_count / superblock_summary.s_blocks_per_group + 1;
     
@@ -208,7 +208,7 @@ void get_is(int fd) {
             
             /* read the inode table into the struct */
             pread(fd, &inode_desc, inode_offset_within_group, inode_addr + j*sizeof(struct ext2_group_desc));
-            
+
             /* if the inode is not being used, iterate to the next inode */
             if(inode_desc.i_mode == 0 || inode_desc.i_links_count == 0)
                 continue;
@@ -223,7 +223,7 @@ void get_is(int fd) {
                 file_type = 'd';
             else
                 file_type = '?';
-            
+
             /* get the creation, modification, and access times */
             char create_time[20], mod_time[20], access_time[20];
             get_time(inode_desc.i_ctime, inode_desc.i_mtime, inode_desc.i_atime, create_time, mod_time, access_time);
@@ -277,6 +277,8 @@ void get_is(int fd) {
             
         }
     }
+
+    // inode_addr += sizeof(struct ext2_group_desc);
     
     return;
 }
