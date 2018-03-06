@@ -37,10 +37,7 @@ struct ext2_group_desc* bgdt;
 int num_groups;
 
 /* size of each block */
-int size_blocks;
-
-/* offset of inode table within each group */
-//int inode_offset_within_group = 214 * size_blocks;    //took this out because can't initialize if size_blocks hasn't been initialized
+int size_blocks = 1024;
 
 /* wrapper function to get the time formatting for i-node summary */
 void get_time(uint32_t c_time, uint32_t m_time, uint32_t a_time, char* c_array, char* m_array, char* a_array){
@@ -75,13 +72,13 @@ void get_sbs(int fd) {
     /* read from superblock and inode offsets and write to their respective structs */
     pread(fd, &superblock_summary, sizeof(struct ext2_super_block), SUPERBLOCK_OFFSET);
     
-    size_blocks = 1024 << superblock_summary.s_log_block_size;
+    int s_size_blocks = 1024 << superblock_summary.s_log_block_size;
     
     /* print the data based on the data given in the structs */
     fprintf(stdout, "SUPERBLOCK,%d,%d,%d,%d,%d,%d,%d\n",
             superblock_summary.s_blocks_count,
             superblock_summary.s_inodes_count,
-            size_blocks,
+            s_size_blocks,
             superblock_summary.s_inode_size,
             superblock_summary.s_blocks_per_group,
             superblock_summary.s_inodes_per_group,
@@ -183,8 +180,8 @@ int get_de(int fd, int inode_num, int offset) {
 }
 
 /* get values for indirect block references */
-void get_ibr(int fd) {
-    return;
+int get_ibr(int fd, int inode_num, int offset, int level) {
+    return 1;
 }
 
 /* get values for i-node summary */
@@ -275,11 +272,32 @@ void get_is(int fd) {
                     local_offset += get_de(fd, j + 1, dir_offset + local_offset);
             }
             
+            /* PROCESS INDIRECT BLOCKS */
+            int * single_indir_addrs = malloc(size_blocks);
+            int * double_indir_addrs = malloc(size_blocks);
+            int * triple_indir_addrs = malloc(size_blocks);
+            
+            if(inode_desc.i_block[12] > 0) {
+                
+                /* read block 13 into the single indirection address array */
+                pread(fd, single_indir_addrs, size_blocks, inode_desc.i_block[12]*size_blocks);
+
+                /* iterate through each of those addresses*/
+                int m;
+                for(m = 0; m < size_blocks/4; m++) {
+                    
+                    if(single_indir_addrs[m] == 0)
+                        break;
+                    
+                    int dir_offset = single_indir_addrs[m] * size_blocks;
+                    int local_offset = 0;
+                    while(local_offset < size_blocks)
+                        local_offset += get_ibr();
+                }
+            }
+            
         }
     }
-
-    // inode_addr += sizeof(struct ext2_group_desc);
-    
     return;
 }
 
