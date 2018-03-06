@@ -177,7 +177,7 @@ int get_de(int fd, int inode_num, int offset) {
             directory_entry.inode,
             directory_entry.rec_len,
             directory_entry.name_len,
-            directory.name);
+            directory_entry.name);
     
     return directory_entry.rec_len;
 }
