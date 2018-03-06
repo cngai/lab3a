@@ -299,7 +299,6 @@ void get_is(int fd) {
                 /* iterate through each of those addresses*/
                 int m;
                 for(m = 0; m < size_blocks/4; m++) {
-                    
                     if(single_indir_addrs[m] == 0)
                         break;
                     
@@ -325,10 +324,13 @@ void get_is(int fd) {
                     /* iterate through primary indirect block addresses */
                     int y;
                     for (y = 0; y < size_blocks/4; y++){
-                        /* implement process indirectory here */
-
-
-
+                        if(single_indir_addrs[m] == 0)
+                            break;
+                    
+                        int dir_offset = single_indir_addrs[y] * size_blocks;
+                        int local_offset = 0;
+                        while(local_offset < size_blocks)
+                            local_offset += get_ibr(fd, j + 1, 13 + y, 2, inode_desc.i_block[13], y + 1);
                     }
                 }
             }
@@ -354,10 +356,13 @@ void get_is(int fd) {
                         /* iterate through primary indirect block addresses */
                         int c;
                         for (c = 0; c < size_blocks/4; c++){
-                            /* implement process indirectory here */
-
-
-                            
+                            if(single_indir_addrs[c] == 0)
+                                break;
+                    
+                            int dir_offset = single_indir_addrs[c] * size_blocks;
+                            int local_offset = 0;
+                            while(local_offset < size_blocks)
+                                local_offset += get_ibr(fd, j + 1, 13 + c, 3, inode_desc.i_block[14], c + 1);
                         }
                     }
                 }
