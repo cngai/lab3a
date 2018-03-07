@@ -327,7 +327,7 @@ void get_is(int fd) {
                     for (x = 0; x < size_blocks/4; x++){
                         if (double_indir_addrs[x] != 0){
                             int dir_offset = inode_desc.i_block[13] * (1024 << superblock_summary.s_log_block_size);
-                            get_ibr(fd, j + 1, dir_offset, 13 + x, 2, inode_desc.i_block[13], double_indir_addrs[x]);
+                            get_ibr(fd, j + 1, dir_offset, 268 + x, 2, inode_desc.i_block[13], double_indir_addrs[x]);
                         }
 
                         /* read primary indirect block addresses */
@@ -339,7 +339,7 @@ void get_is(int fd) {
                             if(single_indir_addrs[y] != 0){
                         
                                 int dir_offset = single_indir_addrs[y] * size_blocks;
-                                get_ibr(fd, j + 1, dir_offset, 13 + y, 1, double_indir_addrs[x], single_indir_addrs[y]);
+                                get_ibr(fd, j + 1, dir_offset, 268 + y, 1, double_indir_addrs[x], single_indir_addrs[y]);
                             }
                         }
                     }
@@ -356,7 +356,7 @@ void get_is(int fd) {
                     for (a = 0; a < size_blocks/4; a++){
                         if (triple_indir_addrs[a] != 0){
                             int dir_offset = inode_desc.i_block[14] * (1024 << superblock_summary.s_log_block_size);
-                            get_ibr(fd, j + 1, dir_offset, 13 + a, 3, inode_desc.i_block[14], triple_indir_addrs[a]);
+                            get_ibr(fd, j + 1, dir_offset, 65804 + a, 3, inode_desc.i_block[14], triple_indir_addrs[a]);
                         }
 
                         /* read double indirect block addresses */
@@ -367,7 +367,7 @@ void get_is(int fd) {
                         for (b = 0; b < size_blocks/4; b++){
                             if (double_indir_addrs[b] != 0){
                             int dir_offset = inode_desc.i_block[14] * (1024 << superblock_summary.s_log_block_size);
-                            get_ibr(fd, j + 1, dir_offset, 13 + b, 2, triple_indir_addrs[a], double_indir_addrs[b]);
+                            get_ibr(fd, j + 1, dir_offset, 65804 + b, 2, triple_indir_addrs[a], double_indir_addrs[b]);
                             }
 
                             /* read primary indirect block addresses */
@@ -379,7 +379,7 @@ void get_is(int fd) {
                                 if(single_indir_addrs[c] != 0){
                         
                                     int dir_offset = single_indir_addrs[c] * size_blocks;
-                                    get_ibr(fd, j + 1, dir_offset, 13 + c, 1, double_indir_addrs[b], single_indir_addrs[c]);
+                                    get_ibr(fd, j + 1, dir_offset, 65804 + c, 1, double_indir_addrs[b], single_indir_addrs[c]);
                                 }
                             }
                         }
