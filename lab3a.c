@@ -239,14 +239,7 @@ void get_is(int fd) {
             /* get the creation, modification, and access times */
             char create_time[20], mod_time[20], access_time[20];
             get_time(inode_desc.i_ctime, inode_desc.i_mtime, inode_desc.i_atime, create_time, mod_time, access_time);
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 
->>>>>>> d1655f2a2fbc8772fed894743e8bcdcee96720d5
-=======
-
->>>>>>> 4708f50f3fa23fe56ada50265b1e3bf8fd00e5ba
             /* print out the i-node summary for that node */
             fprintf(stdout, "INODE,%d,%c,%o,%d,%d,%d,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
                     j + 1,
