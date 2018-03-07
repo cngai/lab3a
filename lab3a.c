@@ -207,15 +207,11 @@ void get_is(int fd) {
     
     /* iterate through each group */
     int i;
-    printf("max i: %d\n", num_groups);
     for(i = 0; i < num_groups; i++) {
         
         /* within each group, iterate through each inode */
         unsigned int j;
-	printf("i: %d\n", i);
-//	printf("max j: %d\n", superblock_summary.s_inodes_count);
         for(j = 0; j < superblock_summary.s_inodes_count; j++) {
-//		printf("j: %d\n", j);
             struct ext2_inode inode_desc; /* declare struct to hold information about inode */
             
             /* read the inode table into the struct */
@@ -249,9 +245,9 @@ void get_is(int fd) {
                     inode_desc.i_uid,
                     inode_desc.i_gid,
                     inode_desc.i_links_count,
-                    "hello",
-                    "hello",
-                    "hello",
+                    create_time,
+                    mod_time,
+                    access_time,
                     inode_desc.i_size,
                     inode_desc.i_blocks,
                     inode_desc.i_block[0],
