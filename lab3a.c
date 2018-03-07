@@ -392,6 +392,10 @@ int main(int argc, char * argv[]) {
     }
     /* open the file system image */
     int fd = open(argv[1], O_RDONLY);
+    if (fd < 0){
+        fprintf(stderr, "Error opening file system.\n");
+        exit(1);
+    }
     
     get_sbs(fd);
     get_gs(fd);

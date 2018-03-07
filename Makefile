@@ -9,7 +9,7 @@ default:
 	$(CC) $(CFLAGS) -o lab3a lab3a.c
 
 dist:
-	tar -czf lab3a-404795904.tar.gz lab3a.c Makefile README
+	tar -czf lab3a-404795904.tar.gz lab3a.c Makefile README ext2_fs.h
 
 clean:
 	rm -rf lab3a lab3a-404795904.tar.gz
