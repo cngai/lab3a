@@ -1,6 +1,6 @@
 // NAME: Virgil Jose, Christopher Ngai
 // EMAIL: virgil@ucla.edu, cngai1223@gmail.com
-// ID: 904765891, 404795904
+// ID: 000000000, 000000000
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
