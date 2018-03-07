@@ -315,7 +315,7 @@ void get_is(int fd) {
 
             /* DOUBLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
 
-            if (0) {
+            if (inode_desc.i_block[13] > 0) {
                 /* read double indirect block addresses */
                 pread(fd, double_indir_addrs, size_blocks, inode_desc.i_block[13] * size_blocks);
 
@@ -341,7 +341,7 @@ void get_is(int fd) {
 
             /* TRIPLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
 
-            if (0){
+            if (inode_desc.i_block[14] > 0){
                 /* read triple indirect block addresses */
                 pread(fd, triple_indir_addrs, size_blocks, inode_desc.i_block[14] * size_blocks);
 
