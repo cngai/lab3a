@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <stdint.h>
 /* header file needed for pread() */
 #include <unistd.h>
 
@@ -180,16 +180,16 @@ int get_de(int fd, int inode_num, int offset) {
 }
 
 /* get values for indirect block references */
-int get_ibr(int fd, int inode_num, int offset, int level_indirection, int block_num_ind, int block_num_ref) {
+int get_ibr(int fd, int inode_num, int pread_offset, int logical_offset, int level_indirection, int block_num_ind, int block_num_ref) {
 
-    struct ext_dir_entry directory_entry;
+    struct ext2_dir_entry directory_entry;
     
-    pread(fd, &directory_entry, sizeof(struct ext2_dir_entry), offset);
+    pread(fd, &directory_entry, sizeof(struct ext2_dir_entry), pread_offset);
     if(directory_entry.inode != 0)
         fprintf(stdout, "INDIRECT,%d,%d,%d,%d,%d\n",
                 inode_num,
                 level_indirection,
-                offset,
+                logical_offset,
                 block_num_ind,
                 block_num_ind + block_num_ref);
 
@@ -207,20 +207,24 @@ void get_is(int fd) {
     
     /* iterate through each group */
     int i;
+    printf("max i: %d\n", num_groups);
     for(i = 0; i < num_groups; i++) {
         
         /* within each group, iterate through each inode */
         unsigned int j;
+	printf("i: %d\n", i);
+//	printf("max j: %d\n", superblock_summary.s_inodes_count);
         for(j = 0; j < superblock_summary.s_inodes_count; j++) {
-            
+//		printf("j: %d\n", j);
             struct ext2_inode inode_desc; /* declare struct to hold information about inode */
             
             /* read the inode table into the struct */
-            pread(fd, &inode_desc, inode_offset_within_group, inode_addr + j*sizeof(struct ext2_group_desc));
+            pread(fd, &inode_desc, sizeof(struct ext2_inode), inode_addr + j*sizeof(struct ext2_inode));
 
             /* if the inode is not being used, iterate to the next inode */
             if(inode_desc.i_mode == 0 || inode_desc.i_links_count == 0)
                 continue;
+
             
             /* get the file type */
             char file_type;
@@ -236,7 +240,7 @@ void get_is(int fd) {
             /* get the creation, modification, and access times */
             char create_time[20], mod_time[20], access_time[20];
             get_time(inode_desc.i_ctime, inode_desc.i_mtime, inode_desc.i_atime, create_time, mod_time, access_time);
-            
+
             /* print out the i-node summary for that node */
             fprintf(stdout, "INODE,%d,%c,%o,%d,%d,%d,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
                     j + 1,
@@ -245,9 +249,9 @@ void get_is(int fd) {
                     inode_desc.i_uid,
                     inode_desc.i_gid,
                     inode_desc.i_links_count,
-                    create_time,
-                    mod_time,
-                    access_time,
+                    "hello",
+                    "hello",
+                    "hello",
                     inode_desc.i_size,
                     inode_desc.i_blocks,
                     inode_desc.i_block[0],
@@ -288,6 +292,8 @@ void get_is(int fd) {
             int * single_indir_addrs = malloc(size_blocks);
             int * double_indir_addrs = malloc(size_blocks);
             int * triple_indir_addrs = malloc(size_blocks);
+
+            /* SINGLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
             
             if(inode_desc.i_block[12] > 0) {
                 
@@ -297,14 +303,72 @@ void get_is(int fd) {
                 /* iterate through each of those addresses*/
                 int m;
                 for(m = 0; m < size_blocks/4; m++) {
-                    
                     if(single_indir_addrs[m] == 0)
                         break;
                     
                     int dir_offset = single_indir_addrs[m] * size_blocks;
                     int local_offset = 0;
                     while(local_offset < size_blocks)
-                        local_offset += get_ibr(fd, j + 1, 12 + m, 1, inode_desc.i_block[12], m + 1);
+                        local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 12 + m, 1, inode_desc.i_block[12], m + 1);
+                }
+            }
+
+            /* DOUBLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
+
+            if (0) {
+                /* read double indirect block addresses */
+                pread(fd, double_indir_addrs, size_blocks, inode_desc.i_block[13] * size_blocks);
+
+                /* iterate through double indirect block addresses */
+                int x;
+                for (x = 0; x < size_blocks/4; x++){
+                    /* read primary indirect block addresses */
+                    pread(fd, single_indir_addrs, size_blocks, double_indir_addrs[x] * size_blocks);
+
+                    /* iterate through primary indirect block addresses */
+                    int y;
+                    for (y = 0; y < size_blocks/4; y++){
+                        if(single_indir_addrs[y] == 0)
+                            break;
+                    
+                        int dir_offset = single_indir_addrs[y] * size_blocks;
+                        int local_offset = 0;
+                        while(local_offset < size_blocks)
+                            local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 13 + y, 2, inode_desc.i_block[13], y + 1);
+                    }
+                }
+            }
+
+            /* TRIPLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
+
+            if (0){
+                /* read triple indirect block addresses */
+                pread(fd, triple_indir_addrs, size_blocks, inode_desc.i_block[14] * size_blocks);
+
+                /* iterate through triple indirect block addresses */
+                int a;
+                for (a = 0; a < size_blocks/4; a++){
+                    /* read double indirect block addresses */
+                    pread(fd, double_indir_addrs, size_blocks, triple_indir_addrs[a] * size_blocks);
+
+                    /* iterate through double indirect block addresses */
+                    int b;
+                    for (b = 0; b < size_blocks/4; b++){
+                        /* read primary indirect block addresses */
+                        pread(fd, single_indir_addrs, size_blocks, double_indir_addrs[b] * size_blocks);
+
+                        /* iterate through primary indirect block addresses */
+                        int c;
+                        for (c = 0; c < size_blocks/4; c++){
+                            if(single_indir_addrs[c] == 0)
+                                break;
+                    
+                            int dir_offset = single_indir_addrs[c] * size_blocks;
+                            int local_offset = 0;
+                            while(local_offset < size_blocks)
+                                local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 13 + c, 3, inode_desc.i_block[14], c + 1);
+                        }
+                    }
                 }
             }
             
