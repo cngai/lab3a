@@ -1,5 +1,9 @@
+// NAME: Virgil Jose, Christopher Ngai
+// EMAIL: virgil@ucla.edu, cngai1223@gmail.com
+// ID: 904765891, 404795904
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 /* header files needed for open() in C99 */
 #include <sys/types.h>
