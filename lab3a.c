@@ -180,13 +180,15 @@ int get_de(int fd, int inode_num, int total_offset, int curr_offset) {
     
     pread(fd, &directory_entry, sizeof(struct ext2_dir_entry), total_offset);
     
-    fprintf(stdout, "DIRENT,%d,%d,%d,%d,%d,'%s'\n",
-            inode_num,
-            curr_offset,
-            directory_entry.inode,
-            directory_entry.rec_len,
-            directory_entry.name_len,
-            directory_entry.name);
+    if (directory_entry.inode != 0){
+        fprintf(stdout, "DIRENT,%d,%d,%d,%d,%d,'%s'\n",
+                inode_num,
+                curr_offset,
+                directory_entry.inode,
+                directory_entry.rec_len,
+                directory_entry.name_len,
+                directory_entry.name);
+    }
     
     return directory_entry.rec_len;
 }
