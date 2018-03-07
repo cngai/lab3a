@@ -232,14 +232,13 @@ void get_is(int fd) {
             if(inode_desc.i_mode == 0 || inode_desc.i_links_count == 0)
                 continue;
 
-            
             /* get the file type */
             char file_type;
-            if(inode_desc.i_mode & 0xA000)
+            if(S_ISLNK(inode_desc.i_mode))
                 file_type = 's';
-            else if(inode_desc.i_mode & 0xA000)
+            else if(S_ISREG(inode_desc.i_mode))
                 file_type = 'f';
-            else if(inode_desc.i_mode & 0x4000)
+            else if(S_ISDIR(inode_desc.i_mode))
                 file_type = 'd';
             else
                 file_type = '?';
@@ -279,102 +278,103 @@ void get_is(int fd) {
                     );
             
             /* if file type is not a file or a directory, continue */
-            if(file_type != 'd' && file_type != 'f')
-                continue;
-            
-            /* PROCESS DIRECTORY CONTENTS FOR BLOCKS 1 TO 12 (THE DIRECT BLOCKS): */
-            int k;
-            for(k = 0; k < EXT2_NDIR_BLOCKS; k++) {
+            if(file_type == 'd' || file_type == 'f'){
+                if (file_type == 'd'){
+                    /* PROCESS DIRECTORY CONTENTS FOR BLOCKS 1 TO 12 (THE DIRECT BLOCKS): */
+                    int k;
+                    for(k = 0; k < EXT2_NDIR_BLOCKS; k++) {
 
-                if(inode_desc.i_block[k] == 0)
-                    break;
-
-                int dir_offset = inode_desc.i_block[k] * size_blocks;
-                int local_offset = 0;
-                while(local_offset < size_blocks){
-                    local_offset += get_de(fd, j + 1, dir_offset + local_offset, local_offset);
-                }
-            }
-            
-            /* PROCESS INDIRECT BLOCKS */
-            int * single_indir_addrs = malloc(size_blocks);
-            int * double_indir_addrs = malloc(size_blocks);
-            int * triple_indir_addrs = malloc(size_blocks);
-
-            /* SINGLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
-            
-            if(inode_desc.i_block[12] > 0) {
-                
-                /* read block 13 into the single indirection address array */
-                pread(fd, single_indir_addrs, size_blocks, inode_desc.i_block[12]*size_blocks);
-
-                /* iterate through each of those addresses*/
-                int m;
-                for(m = 0; m < size_blocks/4; m++) {
-                    if(single_indir_addrs[m] == 0)
-                        break;
-                    
-                    int dir_offset = single_indir_addrs[m] * size_blocks;
-                    int local_offset = 0;
-                    while(local_offset < size_blocks)
-                        local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 12 + m, 1, inode_desc.i_block[12], m + 1);
-                }
-            }
-
-            /* DOUBLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
-
-            if (inode_desc.i_block[13] > 0) {
-                /* read double indirect block addresses */
-                pread(fd, double_indir_addrs, size_blocks, inode_desc.i_block[13] * size_blocks);
-
-                /* iterate through double indirect block addresses */
-                int x;
-                for (x = 0; x < size_blocks/4; x++){
-                    /* read primary indirect block addresses */
-                    pread(fd, single_indir_addrs, size_blocks, double_indir_addrs[x] * size_blocks);
-
-                    /* iterate through primary indirect block addresses */
-                    int y;
-                    for (y = 0; y < size_blocks/4; y++){
-                        if(single_indir_addrs[y] == 0)
+                        if(inode_desc.i_block[k] == 0)
                             break;
-                    
-                        int dir_offset = single_indir_addrs[y] * size_blocks;
+
+                        int dir_offset = inode_desc.i_block[k] * size_blocks;
                         int local_offset = 0;
-                        while(local_offset < size_blocks)
-                            local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 13 + y, 2, inode_desc.i_block[13], y + 1);
+                        while(local_offset < size_blocks){
+                            local_offset += get_de(fd, j + 1, dir_offset + local_offset, local_offset);
+                        }
                     }
                 }
-            }
+                
+                /* PROCESS INDIRECT BLOCKS */
+                int * single_indir_addrs = malloc(size_blocks);
+                int * double_indir_addrs = malloc(size_blocks);
+                int * triple_indir_addrs = malloc(size_blocks);
 
-            /* TRIPLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
+                /* SINGLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
+                
+                if(inode_desc.i_block[12] > 0) {
+                    
+                    /* read block 13 into the single indirection address array */
+                    pread(fd, single_indir_addrs, size_blocks, inode_desc.i_block[12]*size_blocks);
 
-            if (inode_desc.i_block[14] > 0){
-                /* read triple indirect block addresses */
-                pread(fd, triple_indir_addrs, size_blocks, inode_desc.i_block[14] * size_blocks);
+                    /* iterate through each of those addresses*/
+                    int m;
+                    for(m = 0; m < size_blocks/4; m++) {
+                        if(single_indir_addrs[m] == 0)
+                            break;
+                        
+                        int dir_offset = single_indir_addrs[m] * size_blocks;
+                        int local_offset = 0;
+                        while(local_offset < size_blocks)
+                            local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 12 + m, 1, inode_desc.i_block[12], m + 1);
+                    }
+                }
 
-                /* iterate through triple indirect block addresses */
-                int a;
-                for (a = 0; a < size_blocks/4; a++){
+                /* DOUBLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
+
+                if (inode_desc.i_block[13] > 0) {
                     /* read double indirect block addresses */
-                    pread(fd, double_indir_addrs, size_blocks, triple_indir_addrs[a] * size_blocks);
+                    pread(fd, double_indir_addrs, size_blocks, inode_desc.i_block[13] * size_blocks);
 
                     /* iterate through double indirect block addresses */
-                    int b;
-                    for (b = 0; b < size_blocks/4; b++){
+                    int x;
+                    for (x = 0; x < size_blocks/4; x++){
                         /* read primary indirect block addresses */
-                        pread(fd, single_indir_addrs, size_blocks, double_indir_addrs[b] * size_blocks);
+                        pread(fd, single_indir_addrs, size_blocks, double_indir_addrs[x] * size_blocks);
 
                         /* iterate through primary indirect block addresses */
-                        int c;
-                        for (c = 0; c < size_blocks/4; c++){
-                            if(single_indir_addrs[c] == 0)
+                        int y;
+                        for (y = 0; y < size_blocks/4; y++){
+                            if(single_indir_addrs[y] == 0)
                                 break;
-                    
-                            int dir_offset = single_indir_addrs[c] * size_blocks;
+                        
+                            int dir_offset = single_indir_addrs[y] * size_blocks;
                             int local_offset = 0;
                             while(local_offset < size_blocks)
-                                local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 13 + c, 3, inode_desc.i_block[14], c + 1);
+                                local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 13 + y, 2, inode_desc.i_block[13], y + 1);
+                        }
+                    }
+                }
+
+                /* TRIPLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
+
+                if (inode_desc.i_block[14] > 0){
+                    /* read triple indirect block addresses */
+                    pread(fd, triple_indir_addrs, size_blocks, inode_desc.i_block[14] * size_blocks);
+
+                    /* iterate through triple indirect block addresses */
+                    int a;
+                    for (a = 0; a < size_blocks/4; a++){
+                        /* read double indirect block addresses */
+                        pread(fd, double_indir_addrs, size_blocks, triple_indir_addrs[a] * size_blocks);
+
+                        /* iterate through double indirect block addresses */
+                        int b;
+                        for (b = 0; b < size_blocks/4; b++){
+                            /* read primary indirect block addresses */
+                            pread(fd, single_indir_addrs, size_blocks, double_indir_addrs[b] * size_blocks);
+
+                            /* iterate through primary indirect block addresses */
+                            int c;
+                            for (c = 0; c < size_blocks/4; c++){
+                                if(single_indir_addrs[c] == 0)
+                                    break;
+                        
+                                int dir_offset = single_indir_addrs[c] * size_blocks;
+                                int local_offset = 0;
+                                while(local_offset < size_blocks)
+                                    local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 13 + c, 3, inode_desc.i_block[14], c + 1);
+                            }
                         }
                     }
                 }
