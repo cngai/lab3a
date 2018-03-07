@@ -237,9 +237,9 @@ void get_is(int fd) {
             char file_type;
             if(inode_desc.i_mode & 0xA000)
                 file_type = 's';
-            if(inode_desc.i_mode & 0xA000)
+            else if(inode_desc.i_mode & 0xA000)
                 file_type = 'f';
-            if(inode_desc.i_mode & 0x4000)
+            else if(inode_desc.i_mode & 0x4000)
                 file_type = 'd';
             else
                 file_type = '?';
