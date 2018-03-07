@@ -207,20 +207,18 @@ void get_is(int fd) {
     int inode_addr = SUPERBLOCK_OFFSET + 4*size_blocks;
     
     /* offset of inode table within each group */
-    int inode_offset_within_group = 214 * size_blocks;
+    //int inode_offset_within_group = 214 * size_blocks;
     
     /* iterate through each group */
     int i;
     for(i = 0; i < num_groups; i++) {
-        
         /* within each group, iterate through each inode */
         unsigned int j;
         for(j = 0; j < superblock_summary.s_inodes_count; j++) {
-            
             struct ext2_inode inode_desc; /* declare struct to hold information about inode */
             
             /* read the inode table into the struct */
-            pread(fd, &inode_desc, inode_offset_within_group, inode_addr + j*sizeof(struct ext2_group_desc));
+            pread(fd, &inode_desc, sizeof(struct ext2_inode), inode_addr + j*sizeof(struct ext2_inode));
 
             /* if the inode is not being used, iterate to the next inode */
             if(inode_desc.i_mode == 0 || inode_desc.i_links_count == 0)
@@ -240,7 +238,6 @@ void get_is(int fd) {
             /* get the creation, modification, and access times */
             char create_time[20], mod_time[20], access_time[20];
             get_time(inode_desc.i_ctime, inode_desc.i_mtime, inode_desc.i_atime, create_time, mod_time, access_time);
-            
             /* print out the i-node summary for that node */
             fprintf(stdout, "INODE,%d,%c,%o,%d,%d,%d,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
                     j + 1,
