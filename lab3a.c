@@ -112,14 +112,22 @@ void get_gs(int fd) {
         
         pread(fd, &bgdt[i], sizeof(struct ext2_group_desc), BGDT_OFFSET + i*sizeof(struct ext2_group_desc));
         
-        if(i == num_groups - 1) {
+        if(i == num_groups - 1 && block_count_last != 0) {
             block_count = block_count_last;
+        }
+        else {
+            block_count = superblock_summary.s_blocks_per_group;
+        }
+
+        if(i == num_groups - 1 && inode_count_last != 0) {
             inode_count = inode_count_last;
         }
         else {
-            block_count = superblock_summary.s_blocks_count;
-            inode_count = superblock_summary.s_inodes_count;
+            inode_count = superblock_summary.s_inodes_per_group;
         }
+
+                    
+                                
         
         fprintf(stdout, "GROUP,%d,%d,%d,%d,%d,%d,%d,%d\n",
                 i,
