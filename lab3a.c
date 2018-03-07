@@ -203,7 +203,7 @@ int get_ibr(int fd, int inode_num, int pread_offset, int logical_offset, int lev
                 level_indirection,
                 logical_offset,
                 block_num_ind,
-                block_num_ind + block_num_ref);
+                block_num_ref);
 
     return directory_entry.rec_len;
 }
@@ -303,20 +303,19 @@ void get_is(int fd) {
                 /* SINGLE INDIRECT BLOCK REFERENCE IMPLEMENTATION */
                 
                 if(inode_desc.i_block[12] > 0) {
-                    
                     /* read block 13 into the single indirection address array */
                     pread(fd, single_indir_addrs, size_blocks, inode_desc.i_block[12]*size_blocks);
 
                     /* iterate through each of those addresses*/
                     int m;
                     for(m = 0; m < size_blocks/4; m++) {
-                        if(single_indir_addrs[m] == 0)
-                            break;
+                        if(single_indir_addrs[m] != 0){
                         
-                        int dir_offset = single_indir_addrs[m] * size_blocks;
-                        int local_offset = 0;
-                        while(local_offset < size_blocks)
-                            local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 12 + m, 1, inode_desc.i_block[12], m + 1);
+                            int dir_offset = single_indir_addrs[m] * size_blocks;
+                            int local_offset = 0;
+                            while(local_offset < size_blocks)
+                                local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 12 + m, 1, inode_desc.i_block[12], single_indir_addrs[m]);
+                        }
                     }
                 }
 
@@ -335,13 +334,13 @@ void get_is(int fd) {
                         /* iterate through primary indirect block addresses */
                         int y;
                         for (y = 0; y < size_blocks/4; y++){
-                            if(single_indir_addrs[y] == 0)
-                                break;
+                            if(single_indir_addrs[y] != 0){
                         
-                            int dir_offset = single_indir_addrs[y] * size_blocks;
-                            int local_offset = 0;
-                            while(local_offset < size_blocks)
-                                local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 13 + y, 2, inode_desc.i_block[13], y + 1);
+                                int dir_offset = single_indir_addrs[y] * size_blocks;
+                                int local_offset = 0;
+                                while(local_offset < size_blocks)
+                                    local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 13 + y, 2, inode_desc.i_block[13], single_indir_addrs[y]);
+                            }
                         }
                     }
                 }
@@ -367,13 +366,13 @@ void get_is(int fd) {
                             /* iterate through primary indirect block addresses */
                             int c;
                             for (c = 0; c < size_blocks/4; c++){
-                                if(single_indir_addrs[c] == 0)
-                                    break;
+                                if(single_indir_addrs[c] != 0){
                         
-                                int dir_offset = single_indir_addrs[c] * size_blocks;
-                                int local_offset = 0;
-                                while(local_offset < size_blocks)
-                                    local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 13 + c, 3, inode_desc.i_block[14], c + 1);
+                                    int dir_offset = single_indir_addrs[c] * size_blocks;
+                                    int local_offset = 0;
+                                    while(local_offset < size_blocks)
+                                        local_offset += get_ibr(fd, j + 1, dir_offset + local_offset, 13 + c, 3, inode_desc.i_block[14], single_indir_addrs[c]);
+                                }
                             }
                         }
                     }
