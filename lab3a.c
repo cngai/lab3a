@@ -86,7 +86,7 @@ void get_sbs(int fd) {
             superblock_summary.s_inode_size,
             superblock_summary.s_blocks_per_group,
             superblock_summary.s_inodes_per_group,
-            superblock_summary.s_first_data_block);
+            superblock_summary.s_first_ino);
     
 }
 
@@ -207,12 +207,11 @@ void get_is(int fd) {
     int inode_addr = SUPERBLOCK_OFFSET + 4*size_blocks;
     
     /* offset of inode table within each group */
-    int inode_offset_within_group = 214 * size_blocks;
+    //int inode_offset_within_group = 214 * size_blocks;
     
     /* iterate through each group */
     int i;
     for(i = 0; i < num_groups; i++) {
-        
         /* within each group, iterate through each inode */
         unsigned int j;
         for(j = 0; j < superblock_summary.s_inodes_count; j++) {
@@ -284,8 +283,9 @@ void get_is(int fd) {
 
                 int dir_offset = inode_desc.i_block[k] * size_blocks;
                 int local_offset = 0;
-                while(local_offset < size_blocks)
+                while(local_offset < size_blocks){
                     local_offset += get_de(fd, j + 1, dir_offset + local_offset);
+                }
             }
             
             /* PROCESS INDIRECT BLOCKS */
