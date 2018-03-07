@@ -173,16 +173,16 @@ void get_fbe_fie(int fd) {
 }
 
 /* get values for directory entries, and return new offset */
-int get_de(int fd, int inode_num, int offset) {
+int get_de(int fd, int inode_num, int total_offset, int curr_offset) {
     
     /* declare struct for directory entry */
     struct ext2_dir_entry directory_entry;
     
-    pread(fd, &directory_entry, sizeof(struct ext2_dir_entry), offset);
+    pread(fd, &directory_entry, sizeof(struct ext2_dir_entry), total_offset);
     
     fprintf(stdout, "DIRENT,%d,%d,%d,%d,%d,'%s'\n",
             inode_num,
-            offset,
+            curr_offset,
             directory_entry.inode,
             directory_entry.rec_len,
             directory_entry.name_len,
@@ -237,9 +237,9 @@ void get_is(int fd) {
             char file_type;
             if(inode_desc.i_mode & 0xA000)
                 file_type = 's';
-            if(inode_desc.i_mode & 0xA000)
+            else if(inode_desc.i_mode & 0xA000)
                 file_type = 'f';
-            if(inode_desc.i_mode & 0x4000)
+            else if(inode_desc.i_mode & 0x4000)
                 file_type = 'd';
             else
                 file_type = '?';
@@ -292,7 +292,7 @@ void get_is(int fd) {
                 int dir_offset = inode_desc.i_block[k] * size_blocks;
                 int local_offset = 0;
                 while(local_offset < size_blocks){
-                    local_offset += get_de(fd, j + 1, dir_offset + local_offset);
+                    local_offset += get_de(fd, j + 1, dir_offset + local_offset, local_offset);
                 }
             }
             
